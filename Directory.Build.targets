@@ -22,20 +22,26 @@
 "/>
    </ItemGroup>
     <PropertyGroup>
-      <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
+      <PackageVersion>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</PackageVersion>
       <!--<PackageVersion>0.0.1</PackageVersion>-->
     </PropertyGroup>
     <ItemGroup>
-      <Message Importance="high" Text="Version Info:
-  AssemblyVersion:        $(GitSemVerMajor)
+      <Message Importance="High" Text="Version Info:
+  GitSemVerMajor:        $(GitSemVerMajor)
+  GitSemVerMinor:        $(GitSemVerMinor)
+  GitSemVerPatch:        $(GitSemVerPatch)
+  GitSemVerDashLabel:    $(GitSemVerDashLabel)
 "/>
     </ItemGroup>
  </Target>
 
  <Target Name="VersionInfoReport" DependsOnTargets="SetVersions">
    <ItemGroup>
-    <Message Importance="high" Text="Version Info:
-  AssemblyVersion:        $(GitSemVerMajor)
+    <Message Importance="High" Text="Version Info:
+  GitSemVerMajor:        $(GitSemVerMajor)
+  GitSemVerMinor:        $(GitSemVerMinor)
+  GitSemVerPatch:        $(GitSemVerPatch)
+  GitSemVerDashLabel:    $(GitSemVerDashLabel)
 "/>
    </ItemGroup>
   </Target>

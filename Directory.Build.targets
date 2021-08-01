@@ -6,6 +6,7 @@
 
   <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" DependsOnTargets="GitInfo;GitVersion" Returns="$(Version)">
     <PropertyGroup>
+      <BuildTime>$([System.DateTime]::Now.ToString(yyMMddHHmm))</BuildTime>
       <SemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitTag), $(RegexTag)))</SemVerLabel>
       <GitDefaultBranch>main</GitDefaultBranch>
       <GitIgnoreBranchVersion>true</GitIgnoreBranchVersion>
@@ -18,11 +19,7 @@
     <ItemGroup>
       <VersionMetadata Condition="'$(GitSemVerDashLabel)' == ''"
                        Include="$(GitCommits)"/>
-      <VersionMetadata Condition="$(CI) and '$(BUILD_REASON)' == 'PullRequest'"
-                       Include="pr.$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)"/>
       <VersionMetadata Include="sha.$(GitCommit)"/>
-      <VersionMetadata Condition="$(CI)"
-                       Include="azdo.$(BUILD_BUILDID)"/>
     </ItemGroup>
 
     <PropertyGroup>
@@ -31,7 +28,7 @@
       <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
       <PackageVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)$(GitSemVerDashLabel)$(VersionMetadataPlusLabel)</PackageVersion>
 
-      <PackageVersion Condition="$(CI)">$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(BUILDVERSION)$(VersionMetadataPlusLabel)</PackageVersion>
+      <PackageVersion Condition="$(CI)">$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(BuildTime)$(VersionMetadataPlusLabel)</PackageVersion>
     </PropertyGroup>
  </Target>
 </Project>

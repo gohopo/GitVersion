@@ -1,48 +1,23 @@
 <Project>
   <PropertyGroup>
     <NightlyTag>nightly</NightlyTag>
+    <RegexTag>[a-z]+\.[0-9]</RegexTag>
  </PropertyGroup>
 
   <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" DependsOnTargets="GitInfo;GitVersion" Returns="$(Version)">
     <PropertyGroup>
+      <SemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitTag), $(RegexTag)))</SemVerLabel>
       <GitDefaultBranch>main</GitDefaultBranch>
       <GitIgnoreBranchVersion>true</GitIgnoreBranchVersion>
       <GitIgnoreTagVersion>true</GitIgnoreTagVersion>
+      <GitSemVerLabel Condition=" '$(GitTag)' != '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(GitTag)', $(RegexTag))) ">$(SemVerLabel)</GitSemVerLabel>
+      <GitSemVerLabel  Condition="$(CI) and '$(BUILD_REASON)' == 'Schedule'">$(NightlyTag)</GitSemVerLabel>
+      <GitSemVerDashLabel Condition="'$(GitSemVerLabel)' != ''" >-$(GitSemVerLabel)</GitSemVerDashLabel>
     </PropertyGroup>
 
-       <ItemGroup>
-    <Message Importance="high" Text="Version Info:
-  AssemblyVersion:        $(AssemblyVersion)
-  FileVersion:            $(FileVersion)
-  InformationalVersion:   $(InformationalVersion)
-  PackageVersion:         $(PackageVersion)
-  Version:        $(Version)
-  VersionPrefix:  $(VersionPrefix)
-  VersionSuffix:  $(VersionSuffix)
-"/>
-   </ItemGroup>
     <PropertyGroup>
-      <PackageVersion>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</PackageVersion>
-      <!--<PackageVersion>0.0.1</PackageVersion>-->
+      <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
+      <PackageVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)$(GitSemVerDashLabel)</PackageVersion>
     </PropertyGroup>
-    <ItemGroup>
-      <Message Importance="High" Text="Version Info:
-  GitSemVerMajor:        $(GitSemVerMajor)
-  GitSemVerMinor:        $(GitSemVerMinor)
-  GitSemVerPatch:        $(GitSemVerPatch)
-  GitSemVerDashLabel:    $(GitSemVerDashLabel)
-"/>
-    </ItemGroup>
  </Target>
-
- <Target Name="VersionInfoReport" DependsOnTargets="SetVersions">
-   <ItemGroup>
-    <Message Importance="High" Text="Version Info:
-  GitSemVerMajor:        $(GitSemVerMajor)
-  GitSemVerMinor:        $(GitSemVerMinor)
-  GitSemVerPatch:        $(GitSemVerPatch)
-  GitSemVerDashLabel:    $(GitSemVerDashLabel)
-"/>
-   </ItemGroup>
-  </Target>
 </Project>

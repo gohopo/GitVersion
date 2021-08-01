@@ -15,9 +15,23 @@
       <GitSemVerDashLabel Condition="'$(GitSemVerLabel)' != ''" >-$(GitSemVerLabel)</GitSemVerDashLabel>
     </PropertyGroup>
 
+    <ItemGroup>
+      <VersionMetadata Condition="'$(GitSemVerDashLabel)' == ''"
+                       Include="$(GitCommits)"/>
+      <VersionMetadata Condition="$(CI) and '$(BUILD_REASON)' == 'PullRequest'"
+                       Include="pr.$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)"/>
+      <VersionMetadata Include="sha.$(GitCommit)"/>
+      <VersionMetadata Condition="$(CI)"
+                       Include="azdo.$(BUILD_BUILDID)"/>
+    </ItemGroup>
+
     <PropertyGroup>
+      <VersionMetadataLabel>@(VersionMetadata -> '%(Identity)', '-')</VersionMetadataLabel>
+      <VersionMetadataPlusLabel Condition="'$(VersionMetadataLabel)' != ''">+$(VersionMetadataLabel)</VersionMetadataPlusLabel>
       <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
-      <PackageVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)$(GitSemVerDashLabel)</PackageVersion>
+      <PackageVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)$(GitSemVerDashLabel)$(VersionMetadataPlusLabel)</PackageVersion>
+
+      <PackageVersion Condition="$(CI)">$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(BUILDVERSION)$(VersionMetadataPlusLabel)</PackageVersion>
     </PropertyGroup>
  </Target>
 </Project>

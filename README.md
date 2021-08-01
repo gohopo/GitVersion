@@ -1,0 +1,2 @@
+# GitVersion
+package versioning test

@@ -11,7 +11,7 @@
     </PropertyGroup>
 
        <ItemGroup>
-    <Message Importance="$(GitInfoReportImportance)" Text="Version Info:
+    <Message Importance="high" Text="Version Info:
   AssemblyVersion:        $(AssemblyVersion)
   FileVersion:            $(FileVersion)
   InformationalVersion:   $(InformationalVersion)
@@ -26,12 +26,22 @@
       <!--<Version>0.0.1</Version>-->
       <!--<PackageVersion>0.0.2</PackageVersion>-->
     </PropertyGroup>
-
+    <ItemGroup>
+      <Message Importance="high" Text="Version Info:
+  AssemblyVersion:        $(AssemblyVersion)
+  FileVersion:            $(FileVersion)
+  InformationalVersion:   $(InformationalVersion)
+  PackageVersion:         $(PackageVersion)
+  Version:        $(Version)
+  VersionPrefix:  $(VersionPrefix)
+  VersionSuffix:  $(VersionSuffix)
+"/>
+    </ItemGroup>
  </Target>
 
  <Target Name="VersionInfoReport" DependsOnTargets="SetVersions">
    <ItemGroup>
-    <Message Importance="$(GitInfoReportImportance)" Text="Version Info:
+    <Message Importance="high" Text="Version Info:
   AssemblyVersion:        $(AssemblyVersion)
   FileVersion:            $(FileVersion)
   InformationalVersion:   $(InformationalVersion)

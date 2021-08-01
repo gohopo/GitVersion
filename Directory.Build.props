@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Authors>gohopo</Authors>
+    <NeutralLanguage>zh-cn</NeutralLanguage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitInfo" Version="2.1.2" PrivateAssets="All" />
+    <PackageReference Include="MSBuilder.GenerateAssemblyInfo" Version="0.2.2" PrivateAssets="All" />
+	</ItemGroup>
+
+  <Target Name="GitVersion" />
+  <Target Name="GitInfo" />
+</Project>

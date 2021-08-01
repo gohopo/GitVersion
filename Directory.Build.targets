@@ -1,0 +1,45 @@
+<Project>
+  <PropertyGroup>
+    <NightlyTag>nightly</NightlyTag>
+ </PropertyGroup>
+
+  <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" DependsOnTargets="GitInfo;GitVersion" Returns="$(Version)">
+    <PropertyGroup>
+      <GitDefaultBranch>main</GitDefaultBranch>
+      <GitIgnoreBranchVersion>true</GitIgnoreBranchVersion>
+      <GitIgnoreTagVersion>true</GitIgnoreTagVersion>
+    </PropertyGroup>
+
+       <ItemGroup>
+    <Message Importance="$(GitInfoReportImportance)" Text="Version Info:
+  AssemblyVersion:        $(AssemblyVersion)
+  FileVersion:            $(FileVersion)
+  InformationalVersion:   $(InformationalVersion)
+  PackageVersion:         $(PackageVersion)
+  Version:        $(Version)
+  VersionPrefix:  $(VersionPrefix)
+  VersionSuffix:  $(VersionSuffix)
+"/>
+   </ItemGroup>
+    <PropertyGroup>
+      <PackageVersion>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</PackageVersion>
+      <!--<Version>0.0.1</Version>-->
+      <!--<PackageVersion>0.0.2</PackageVersion>-->
+    </PropertyGroup>
+
+ </Target>
+
+ <Target Name="VersionInfoReport" DependsOnTargets="SetVersions">
+   <ItemGroup>
+    <Message Importance="$(GitInfoReportImportance)" Text="Version Info:
+  AssemblyVersion:        $(AssemblyVersion)
+  FileVersion:            $(FileVersion)
+  InformationalVersion:   $(InformationalVersion)
+  PackageVersion:         $(PackageVersion)
+  Version:        $(Version)
+  VersionPrefix:  $(VersionPrefix)
+  VersionSuffix:  $(VersionSuffix)
+"/>
+   </ItemGroup>
+  </Target>
+</Project>

@@ -28,7 +28,9 @@
       <AssemblyVersion>1.0.0.0</AssemblyVersion>
     </PropertyGroup>
 
-    <Message Importance="high" Text="##gohopo[$(GitBranch)]$(NightlyTag)"/>
-    <Message Importance="high" Text="##gohopo[$(GitBranch)]$(PackageVersion)"/>
+    <Message Importance="high" Text="[$(GITHUB_REPOSITORY)] branch"/>
+    <Message Importance="high" Text="$(GitBranch)"/>
+    <Message Importance="high" Text="[$(GITHUB_REPOSITORY)] version"/>
+    <Message Importance="high" Text="$(PackageVersion)"/>
   </Target>
 </Project>

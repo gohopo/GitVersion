@@ -27,9 +27,9 @@
       <VersionMetadataPlusLabel Condition="'$(VersionMetadataLabel)' != ''">+$(VersionMetadataLabel)</VersionMetadataPlusLabel>
       <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
       <PackageVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)$(GitSemVerDashLabel)$(VersionMetadataPlusLabel)</PackageVersion>
-      <BuildTime>$(GitCommits)</BuildTime>
 
       <PackageVersion Condition="$(CI)">$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(BuildTime)$(VersionMetadataPlusLabel)</PackageVersion>
+      <PackageVersion>$(GitCommits).$(GITHUB_RUN_ID).$(GITHUB_RUN_NUMBER)</PackageVersion>
     </PropertyGroup>
   </Target>
 </Project>

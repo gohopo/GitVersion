@@ -6,12 +6,11 @@
 
   <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" DependsOnTargets="GitInfo;GitVersion" Returns="$(Version)">
     <PropertyGroup>
-      <BuildTime>$([System.DateTime]::Now.ToString(yyMMddHHmm))</BuildTime>
       <SemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitTag), $(RegexTag)))</SemVerLabel>
       <GitDefaultBranch>main</GitDefaultBranch>
       <GitIgnoreBranchVersion>true</GitIgnoreBranchVersion>
       <GitIgnoreTagVersion>true</GitIgnoreTagVersion>
-      <GitSemVerLabel Condition=" '$(GitTag)' != '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(GitTag)', $(RegexTag))) ">$(SemVerLabel)</GitSemVerLabel>
+      <GitSemVerLabel Condition=" '$(GitTag)' != '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(GitTag)', $(RegexTag))) ">$(SemVerLabel)</GitSemVerLabel> 
       <GitSemVerLabel  Condition="$(CI) and '$(BUILD_REASON)' == 'Schedule'">$(NightlyTag)</GitSemVerLabel>
       <GitSemVerDashLabel Condition="'$(GitSemVerLabel)' != ''" >-$(GitSemVerLabel)</GitSemVerDashLabel>
     </PropertyGroup>
@@ -20,16 +19,26 @@
       <VersionMetadata Condition="'$(GitSemVerDashLabel)' == ''"
                        Include="$(GitCommits)"/>
       <VersionMetadata Include="sha.$(GitCommit)"/>
+      <VersionMetadata Condition="$(CI)"
+                       Include="azdo.$(BUILD_BUILDID)"/>
     </ItemGroup>
 
     <PropertyGroup>
       <VersionMetadataLabel>@(VersionMetadata -> '%(Identity)', '-')</VersionMetadataLabel>
       <VersionMetadataPlusLabel Condition="'$(VersionMetadataLabel)' != ''">+$(VersionMetadataLabel)</VersionMetadataPlusLabel>
       <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
-      <PackageVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)$(GitSemVerDashLabel)$(VersionMetadataPlusLabel)</PackageVersion>
-
-      <PackageVersion Condition="$(CI)">$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(BuildTime)$(VersionMetadataPlusLabel)</PackageVersion>
-      <PackageVersion>$(GitCommits).$(GITHUB_RUN_ID).$(GITHUB_RUN_NUMBER)</PackageVersion>
+      <PackageReferenceVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)$(GitSemVerDashLabel)</PackageReferenceVersion>
+      <PackageReferenceVersion Condition="$(CI)">$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(BUILDVERSION)</PackageReferenceVersion>
+      <PackageVersion>$(PackageReferenceVersion)$(VersionMetadataPlusLabel)</PackageVersion>
     </PropertyGroup>
+
+    <PropertyGroup>
+      <InformationalVersion>$(PackageVersion)</InformationalVersion>
+      <FileVersion>$(Version).$(GitCommits)</FileVersion>
+      <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    </PropertyGroup>
+
+    <Message Condition="$(CI) and '$(BUILD_REASON)' == 'Schedule'" Importance="high" Text="##vso[build.addbuildtag]$(NightlyTag)"/>
+    <Message Condition="$(CI)" Importance="high" Text="##vso[build.updatebuildnumber]$(PackageVersion)"/>
   </Target>
 </Project>

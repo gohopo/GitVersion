@@ -1,0 +1,34 @@
+<Project>
+  <PropertyGroup>
+    <NightlyTag>nightly</NightlyTag>
+    <RegexTag>[a-z]+\.[0-9]</RegexTag>
+  </PropertyGroup>
+
+  <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" DependsOnTargets="GitInfo;GitVersion" Returns="$(Version)">
+    <PropertyGroup>
+      <BuildTime>$([System.DateTime]::Now.ToString(yyMMddHHmm))</BuildTime>
+      <SemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitTag), $(RegexTag)))</SemVerLabel>
+      <GitDefaultBranch>main</GitDefaultBranch>
+      <GitIgnoreBranchVersion>true</GitIgnoreBranchVersion>
+      <GitIgnoreTagVersion>true</GitIgnoreTagVersion>
+      <GitSemVerLabel Condition=" '$(GitTag)' != '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(GitTag)', $(RegexTag))) ">$(SemVerLabel)</GitSemVerLabel>
+      <GitSemVerLabel  Condition="$(CI) and '$(BUILD_REASON)' == 'Schedule'">$(NightlyTag)</GitSemVerLabel>
+      <GitSemVerDashLabel Condition="'$(GitSemVerLabel)' != ''" >-$(GitSemVerLabel)</GitSemVerDashLabel>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <VersionMetadata Condition="'$(GitSemVerDashLabel)' == ''"
+                       Include="$(GitCommits)"/>
+      <VersionMetadata Include="sha.$(GitCommit)"/>
+    </ItemGroup>
+
+    <PropertyGroup>
+      <VersionMetadataLabel>@(VersionMetadata -> '%(Identity)', '-')</VersionMetadataLabel>
+      <VersionMetadataPlusLabel Condition="'$(VersionMetadataLabel)' != ''">+$(VersionMetadataLabel)</VersionMetadataPlusLabel>
+      <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
+      <PackageVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)$(GitSemVerDashLabel)$(VersionMetadataPlusLabel)</PackageVersion>
+
+      <PackageVersion Condition="$(CI)">$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(BuildTime)$(VersionMetadataPlusLabel)</PackageVersion>
+    </PropertyGroup>
+  </Target>
+</Project>

@@ -1,7 +1,8 @@
 name: publish to nuget
 on:
-  push
-
+  push:
+    branches:
+    - build
 jobs:
   build-publish:
     runs-on: ubuntu-latest
@@ -11,10 +12,11 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: setup dotnet core
+    - name: setup dotnet
       uses: actions/setup-dotnet@master
       with:
-        dotnet-version: 3.1.201
+        dotnet-version: '6.0.x'
+        include-prerelease: true
         
     - name: pack
-      run: dotnet pack --configuration Release -o ./bin/publish
+      run: dotnet pack --configuration Release

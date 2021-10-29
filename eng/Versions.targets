@@ -1,36 +1,94 @@
 <Project>
   <PropertyGroup>
     <NightlyTag>nightly</NightlyTag>
+    <RegexTag>[a-z]+\.[0-9]</RegexTag>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <SetVersionsDependsOn>InitLocalVersions</SetVersionsDependsOn>
+    <SetVersionsDependsOn Condition="$(CI)==true">GitInfo;GitVersion</SetVersionsDependsOn>
   </PropertyGroup>
 
-  <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" DependsOnTargets="GitInfo;GitVersion" Returns="$(Version)">
+  <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" DependsOnTargets="$(SetVersionsDependsOn)" Returns="$(Version)">
     <PropertyGroup>
-      <GitSemVerLabel  Condition="'$(GitBranch)' != 'build'">$(NightlyTag)</GitSemVerLabel>
+      <SemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitTag), $(RegexTag)))</SemVerLabel>
+      <GitSemVerLabel Condition=" '$(GitTag)' != '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(GitTag)', $(RegexTag))) ">$(SemVerLabel)</GitSemVerLabel>
       <GitSemVerDashLabel Condition="'$(GitSemVerLabel)' != ''" >-$(GitSemVerLabel)</GitSemVerDashLabel>
     </PropertyGroup>
 
     <ItemGroup>
-      <VersionMetadata Include="$(GITHUB_RUN_ID)"/>
-      <VersionMetadata Include="sha.$(GitCommit)"/>
+      <VersionMetadata Include="$(GITHUB_RUN_NUMBER)"/>
+      <VersionMetadata Condition="$(CI)==true" Include="sha.$(GitCommit)"/>
     </ItemGroup>
+    
+    <PropertyGroup>
+      <VersionMetadataLabel>@(VersionMetadata -> '%(Identity)', '-')</VersionMetadataLabel>
+      <VersionMetadataPlusLabel Condition="'$(VersionMetadataLabel)' != ''">+$(VersionMetadataLabel)</VersionMetadataPlusLabel>
+      <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
+      <PackageReferenceVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)$(GitSemVerDashLabel)</PackageReferenceVersion>
+      <PackageVersion>$(PackageReferenceVersion)$(VersionMetadataPlusLabel)</PackageVersion>
+    </PropertyGroup>
 
     <PropertyGroup>
       <VersionMetadataLabel>@(VersionMetadata -> '%(Identity)', '-')</VersionMetadataLabel>
       <VersionMetadataPlusLabel Condition="'$(VersionMetadataLabel)' != ''">+$(VersionMetadataLabel)</VersionMetadataPlusLabel>
       <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
-      <PackageReferenceVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(GITHUB_RUN_NUMBER)</PackageReferenceVersion>
+      <PackageReferenceVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel)</PackageReferenceVersion>
       <PackageVersion>$(PackageReferenceVersion)$(VersionMetadataPlusLabel)</PackageVersion>
     </PropertyGroup>
 
     <PropertyGroup>
       <InformationalVersion>$(PackageVersion)</InformationalVersion>
-      <FileVersion>$(Version).$(GITHUB_RUN_NUMBER)</FileVersion>
+      <FileVersion>$(Version)</FileVersion>
       <AssemblyVersion>1.0.0.0</AssemblyVersion>
     </PropertyGroup>
 
-    <Message Importance="high" Text="[$(GITHUB_REPOSITORY)] branch"/>
-    <Message Importance="high" Text="$(GitBranch)"/>
-    <Message Importance="high" Text="[$(GITHUB_REPOSITORY)] version"/>
-    <Message Importance="high" Text="$(PackageVersion)"/>
+    <Message Importance="high" Text="[$(GITHUB_REPOSITORY)@$(GitBranch)]
+Version Info:
+  AssemblyVersion:        $(AssemblyVersion)
+  FileVersion:            $(FileVersion)
+  InformationalVersion:   $(InformationalVersion)
+  PackageVersion:         $(PackageVersion)
+  Version:                $(Version)"/>
+  </Target>
+
+  <Target Name="InitLocalVersions" BeforeTargets="SetVersions">
+    <!-- GitVersionFile -->
+    <PropertyGroup>
+      <GitVersionFile Condition="'$(GitVersionFile)' == ''">GitInfo.txt</GitVersionFile>
+      <GitInfoBaseDir Condition="'$(GitInfoBaseDir)' == ''">$(MSBuildProjectDirectory)</GitInfoBaseDir>
+      <GitVersionFile Condition="'$([MSBuild]::GetDirectoryNameOfFileAbove($(GitInfoBaseDir), $(GitVersionFile)))' != ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(GitInfoBaseDir), $(GitVersionFile)))\$(GitVersionFile)</GitVersionFile>
+    </PropertyGroup>
+    <!-- GitVersionFile text -->
+    <PropertyGroup>
+      <GitBaseVersion>$([System.IO.File]::ReadAllText('$(GitVersionFile)'))</GitBaseVersion>
+      <GitBaseVersion>$(GitBaseVersion.Trim())</GitBaseVersion>
+      <GitBaseVersionRegex Condition="'$(GitBaseVersionRegex)' == ''">v?(?&lt;MAJOR&gt;\d+)\.(?&lt;MINOR&gt;\d+)(?:\-(?&lt;LABEL&gt;[\dA-Za-z\-\.]+))?$|^v?(?&lt;MAJOR&gt;\d+)\.(?&lt;MINOR&gt;\d+)\.(?&lt;PATCH&gt;\d+)(?:\-(?&lt;LABEL&gt;[\dA-Za-z\-\.]+))?$|^(?&lt;LABEL&gt;[\dA-Za-z\-\.]+)\-v?(?&lt;MAJOR&gt;\d+)\.(?&lt;MINOR&gt;\d+)\.(?&lt;PATCH&gt;\d+)$</GitBaseVersionRegex>
+      <IsValidGitBaseVersion>
+        $([System.Text.RegularExpressions.Regex]::IsMatch($(GitBaseVersion), $(GitBaseVersionRegex)))
+      </IsValidGitBaseVersion>
+      <IsValidGitBaseVersion>$(IsValidGitBaseVersion.Trim())</IsValidGitBaseVersion>
+    </PropertyGroup>
+    <Error Text="$(GitVersionFile) does not contain a valid base version (found '$(GitBaseVersion)', regex: $(GitBaseVersionRegex))." Condition="'$(IsValidGitBaseVersion)' == 'False'" />
+    <!-- GitBaseVersion -->
+    <PropertyGroup>
+      <GitBaseVersion Condition="$(GitBaseVersion.StartsWith('v'))">$(GitBaseVersion.TrimStart('v'))</GitBaseVersion>
+      <GitBaseVersion Condition="$(GitBaseVersion.StartsWith('V'))">$(GitBaseVersion.TrimStart('V'))</GitBaseVersion>
+      <GitBaseVersionMajor>$([System.Text.RegularExpressions.Regex]::Match($(GitBaseVersion), $(GitBaseVersionRegex)).Groups['MAJOR'].Value)</GitBaseVersionMajor>
+      <GitBaseVersionMinor>$([System.Text.RegularExpressions.Regex]::Match($(GitBaseVersion), $(GitBaseVersionRegex)).Groups['MINOR'].Value)</GitBaseVersionMinor>
+      <GitBaseVersionPatch>$([System.Text.RegularExpressions.Regex]::Match($(GitBaseVersion), $(GitBaseVersionRegex)).Groups['PATCH'].Value)</GitBaseVersionPatch>
+      <GitBaseVersionPatch Condition="'$(GitBaseVersionPatch)' == ''">0</GitBaseVersionPatch>
+      <GitSemVerMajor>$(GitBaseVersionMajor)</GitSemVerMajor>
+      <GitSemVerMinor>$(GitBaseVersionMinor)</GitSemVerMinor>
+      <GitSemVerPatch>$(GitBaseVersionPatch)</GitSemVerPatch>
+      <GitSemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitBaseVersion), $(GitBaseVersionRegex)).Groups['LABEL'].Value)</GitSemVerLabel>
+      <GitSemVerDashLabel Condition="'$(GitSemVerLabel)' != ''" >-$(GitSemVerLabel)</GitSemVerDashLabel>
+    </PropertyGroup>
+    <!-- init -->
+    <PropertyGroup>
+      <BuildTime>$([System.DateTime]::Now.ToString(yyMMddHHmm))</BuildTime>
+      <GitBranch>local</GitBranch>
+      <GITHUB_RUN_NUMBER>$(BuildTime)</GITHUB_RUN_NUMBER>
+    </PropertyGroup>
   </Target>
 </Project>

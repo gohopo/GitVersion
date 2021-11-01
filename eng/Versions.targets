@@ -43,13 +43,7 @@
       <AssemblyVersion>1.0.0.0</AssemblyVersion>
     </PropertyGroup>
 
-    <Message Importance="high" Text="[$(GITHUB_REPOSITORY)@$(GitBranch)]
-Version Info:
-  AssemblyVersion:        $(AssemblyVersion)
-  FileVersion:            $(FileVersion)
-  InformationalVersion:   $(InformationalVersion)
-  PackageVersion:         $(PackageVersion)
-  Version:                $(Version)"/>
+    <Message Importance="high" Text="[$(ProjectName)@$(GitBranch)] $(PackageVersion)"/>
   </Target>
 
   <Target Name="InitLocalVersions" BeforeTargets="SetVersions">

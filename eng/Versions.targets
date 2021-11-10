@@ -17,7 +17,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <VersionMetadata Include="$(GITHUB_RUN_NUMBER)"/>
       <VersionMetadata Condition="$(CI)==true" Include="sha.$(GitCommit)"/>
     </ItemGroup>
     
@@ -25,15 +24,7 @@
       <VersionMetadataLabel>@(VersionMetadata -> '%(Identity)', '-')</VersionMetadataLabel>
       <VersionMetadataPlusLabel Condition="'$(VersionMetadataLabel)' != ''">+$(VersionMetadataLabel)</VersionMetadataPlusLabel>
       <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
-      <PackageReferenceVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)$(GitSemVerDashLabel)</PackageReferenceVersion>
-      <PackageVersion>$(PackageReferenceVersion)$(VersionMetadataPlusLabel)</PackageVersion>
-    </PropertyGroup>
-
-    <PropertyGroup>
-      <VersionMetadataLabel>@(VersionMetadata -> '%(Identity)', '-')</VersionMetadataLabel>
-      <VersionMetadataPlusLabel Condition="'$(VersionMetadataLabel)' != ''">+$(VersionMetadataLabel)</VersionMetadataPlusLabel>
-      <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
-      <PackageReferenceVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel)</PackageReferenceVersion>
+      <PackageReferenceVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(GITHUB_RUN_NUMBER)</PackageReferenceVersion>
       <PackageVersion>$(PackageReferenceVersion)$(VersionMetadataPlusLabel)</PackageVersion>
     </PropertyGroup>
 

@@ -3,13 +3,8 @@
     <NightlyTag>nightly</NightlyTag>
     <RegexTag>[a-z]+\.[0-9]</RegexTag>
   </PropertyGroup>
-  
-  <PropertyGroup>
-    <SetVersionsDependsOn>InitLocalVersions</SetVersionsDependsOn>
-    <SetVersionsDependsOn Condition="'$(CI)'=='true'">GitInfo;GitVersion</SetVersionsDependsOn>
-  </PropertyGroup>
 
-  <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" DependsOnTargets="$(SetVersionsDependsOn)" Returns="$(Version)">
+  <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" Returns="$(Version)">
     <PropertyGroup>
       <SemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitTag), $(RegexTag)))</SemVerLabel>
       <GitSemVerLabel Condition=" '$(GitTag)' != '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(GitTag)', $(RegexTag))) ">$(SemVerLabel)</GitSemVerLabel>
@@ -17,7 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <VersionMetadata Condition="'$(CI)'=='true'" Include="sha.$(GitCommit)"/>
+      <VersionMetadata Condition="$(CI)==true" Include="sha.$(GitCommit)"/>
     </ItemGroup>
     
     <PropertyGroup>
@@ -37,7 +32,7 @@
     <Message Importance="high" Text="[$(ProjectName)@$(GitBranch)] $(PackageVersion)"/>
   </Target>
 
-  <Target Name="InitLocalVersions" BeforeTargets="SetVersions">
+  <Target Name="InitLocalVersions" BeforeTargets="SetVersions" Condition="$(CI)!=true">
     <!-- GitVersionFile -->
     <PropertyGroup>
       <GitVersionFile Condition="'$(GitVersionFile)' == ''">GitInfo.txt</GitVersionFile>

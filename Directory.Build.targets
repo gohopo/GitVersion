@@ -1,4 +1,4 @@
 <Project>
-  <Import Condition="'$(CI)'=='true'" Project="eng\Git.Build.targets" />
+  <Import Condition="$(CI)==true" Project="eng\Git.Build.targets" />
   <Import Project="eng\Versions.targets" />
 </Project>

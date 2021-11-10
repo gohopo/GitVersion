@@ -6,7 +6,7 @@
   
   <PropertyGroup>
     <SetVersionsDependsOn>InitLocalVersions</SetVersionsDependsOn>
-    <SetVersionsDependsOn Condition="$(CI)==true">GitInfo;GitVersion</SetVersionsDependsOn>
+    <SetVersionsDependsOn Condition="'$(CI)'=='true'">GitInfo;GitVersion</SetVersionsDependsOn>
   </PropertyGroup>
 
   <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" DependsOnTargets="$(SetVersionsDependsOn)" Returns="$(Version)">
@@ -17,7 +17,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <VersionMetadata Condition="$(CI)==true" Include="sha.$(GitCommit)"/>
+      <VersionMetadata Condition="'$(CI)'=='true'" Include="sha.$(GitCommit)"/>
     </ItemGroup>
     
     <PropertyGroup>

@@ -12,6 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <VersionMetadata Condition="$(CI)!=true" Include="$(BuildTime)"/>
       <VersionMetadata Condition="$(CI)==true" Include="sha.$(GitCommit)"/>
     </ItemGroup>
     
@@ -19,7 +20,8 @@
       <VersionMetadataLabel>@(VersionMetadata -> '%(Identity)', '-')</VersionMetadataLabel>
       <VersionMetadataPlusLabel Condition="'$(VersionMetadataLabel)' != ''">+$(VersionMetadataLabel)</VersionMetadataPlusLabel>
       <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
-      <PackageReferenceVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(GITHUB_RUN_NUMBER)</PackageReferenceVersion>
+      <PackageReferenceVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel)</PackageReferenceVersion>
+      <PackageReferenceVersion Condition="$(CI)==true">$(PackageReferenceVersion).$(GITHUB_RUN_NUMBER)</PackageReferenceVersion>
       <PackageVersion>$(PackageReferenceVersion)$(VersionMetadataPlusLabel)</PackageVersion>
     </PropertyGroup>
 
@@ -68,7 +70,6 @@
     <PropertyGroup>
       <BuildTime>$([System.DateTime]::Now.ToString(yyMMddHHmm))</BuildTime>
       <GitBranch>local</GitBranch>
-      <GITHUB_RUN_NUMBER>$(BuildTime)</GITHUB_RUN_NUMBER>
     </PropertyGroup>
   </Target>
 </Project>

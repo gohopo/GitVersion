@@ -1,4 +1,3 @@
 <Project>
-  <Import Condition="$(CI)==true" Project="eng\Git.Build.targets" />
-  <Import Condition="$(IsPublishable)!=false" Project="eng\Versions.targets" />
+  <Import Project="src\GitVersion\Gohopo.GitVersion.targets" />
 </Project>

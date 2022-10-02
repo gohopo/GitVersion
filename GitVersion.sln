@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31521.260
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GitVersion", "src\GitVersion\GitVersion.csproj", "{C25A6855-8CE3-4A0E-A9B6-F630555B9CD5}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F4B71976-A09B-48D4-B9BB-91A37E1AECD3}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{C7DAD918-6554-4D50-84A3-4EFD76F3B95F}"
 	ProjectSection(SolutionItems) = preProject
 		GitInfo.txt = GitInfo.txt
 	EndProjectSection

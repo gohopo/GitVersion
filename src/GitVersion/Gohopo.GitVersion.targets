@@ -1,10 +1,16 @@
 <Project>
   <PropertyGroup>
+    <Publishing Condition="$(IsPublishable)!=false and ($(CI)==true or $(Packing)==true)">true</Publishing>
     <NightlyTag>nightly</NightlyTag>
     <RegexTag>[a-z]+\.[0-9]</RegexTag>
   </PropertyGroup>
 
-  <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" Returns="$(Version)">
+  <ItemGroup Condition="$(CI)==true">
+    <PackageReference Include="GitInfo" Version="2.1.2" PrivateAssets="All" />
+    <PackageReference Include="MSBuilder.GenerateAssemblyInfo" Version="0.2.2" PrivateAssets="All" />
+  </ItemGroup>
+
+  <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" Returns="$(Version)" Condition="$(Publishing)==true">
     <PropertyGroup>
       <SemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitTag), $(RegexTag)))</SemVerLabel>
       <GitSemVerLabel Condition=" '$(GitTag)' != '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(GitTag)', $(RegexTag))) ">$(SemVerLabel)</GitSemVerLabel>
@@ -15,7 +21,7 @@
       <VersionMetadata Condition="$(CI)!=true" Include="$(BuildTime)"/>
       <VersionMetadata Condition="$(CI)==true" Include="sha.$(GitCommit)"/>
     </ItemGroup>
-    
+
     <PropertyGroup>
       <VersionMetadataLabel>@(VersionMetadata -> '%(Identity)', '-')</VersionMetadataLabel>
       <VersionMetadataPlusLabel Condition="'$(VersionMetadataLabel)' != ''">+$(VersionMetadataLabel)</VersionMetadataPlusLabel>

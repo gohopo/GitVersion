@@ -6,8 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Gohopo.GitVersion.targets">
+    <Content Include="build\Gohopo.GitVersion.targets">
       <PackagePath>build</PackagePath>
+    </Content>
+    <Content Include="buildMultiTargeting\Gohopo.GitVersion.targets">
+      <PackagePath>buildMultiTargeting</PackagePath>
     </Content>
   </ItemGroup>
 </Project>

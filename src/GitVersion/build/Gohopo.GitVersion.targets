@@ -9,6 +9,10 @@
     <PackageReference Include="MSBuilder.GenerateAssemblyInfo" Version="0.2.2" PrivateAssets="All" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <GetPackageVersionDependsOn>SetVersions;$(GetPackageVersionDependsOn);</GetPackageVersionDependsOn>
+  </PropertyGroup>
+
   <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" Returns="$(Version)" Condition="$(CI)==true or $(Packing)==true">
     <PropertyGroup>
       <SemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitTag), $(RegexTag)))</SemVerLabel>

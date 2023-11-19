@@ -17,8 +17,9 @@ jobs:
         
     - name: pack
       run: dotnet pack --configuration Release
+
+    - name: add azure source
+      run: dotnet nuget add source https://pkgs.dev.azure.com/gohopo/_packaging/dev/nuget/v3/index.json --name dev --username az --password ${{ env.AZURE_KEY }} --store-password-in-clear-text
         
     - name: publish
-      run: |
-        dotnet nuget add source https://pkgs.dev.azure.com/gohopo/_packaging/dev/nuget/v3/index.json --name dev --username az --password ${{ env.AZURE_KEY }} --store-password-in-clear-text
-        dotnet nuget push **/*.nupkg --skip-duplicate --api-key az --source "dev"
+      run: dotnet nuget push **/*.nupkg --skip-duplicate --api-key az --source "dev"

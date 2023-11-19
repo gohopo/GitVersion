@@ -14,12 +14,9 @@ jobs:
       uses: actions/setup-dotnet@master
       with:
         dotnet-version: '8.0.x'
-        source-url: https://api.nuget.org/v3/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_KEY }}
         
     - name: pack
       run: dotnet pack --configuration Release
 
     - name: publish to nuget
-      run: dotnet nuget push **/*.nupkg --skip-duplicate --api-key ghp
+      run: dotnet nuget push **/*.nupkg --skip-duplicate --api-key ${{ secrets.NUGET_KEY }} --source "nuget.org"

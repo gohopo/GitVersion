@@ -2,7 +2,7 @@ name: publish to nuget
 on:
   push:
     branches:
-    - build
+    - publish
 jobs:
   build-publish:
     runs-on: windows-latest
@@ -18,5 +18,5 @@ jobs:
     - name: pack
       run: dotnet pack --configuration Release
 
-    - name: publish to nuget
+    - name: publish
       run: dotnet nuget push **/*.nupkg --skip-duplicate --api-key ${{ secrets.NUGET_KEY }} --source "nuget.org"

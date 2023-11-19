@@ -14,12 +14,11 @@ jobs:
       uses: actions/setup-dotnet@master
       with:
         dotnet-version: '8.0.x'
-
-    - name: add azure source
-      run: dotnet nuget add source https://pkgs.dev.azure.com/gohopo/_packaging/dev/nuget/v3/index.json --name dev --username az --password ${{ env.AZURE_KEY }} --store-password-in-clear-text
         
     - name: pack
       run: dotnet pack --configuration Release
-
-    - name: publish to nuget
-      run: dotnet nuget push **/*.nupkg --skip-duplicate --api-key az --source "dev"
+        
+    - name: publish
+      run: |
+        dotnet nuget add source https://pkgs.dev.azure.com/gohopo/_packaging/dev/nuget/v3/index.json --name dev --username az --password ${{ env.AZURE_KEY }} --store-password-in-clear-text
+        dotnet nuget push **/*.nupkg --skip-duplicate --api-key az --source "dev"

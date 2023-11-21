@@ -25,7 +25,7 @@
       <VersionMetadata Include="$(GitCommits)" Condition="'$(GitSemVerDashLabel)' == ''" />
       <VersionMetadata Condition="$(CI) and '$(BUILD_REASON)' == 'PullRequest'" Include="pr.$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)"/>
       <VersionMetadata Include="sha.$(GitCommit)"/>
-      <VersionMetadata Condition="$(CI)" Include="azdo.$(BUILD_BUILDID)"/>
+      <VersionMetadata Condition="$(CI)" Include="azdo.$(GITHUB_RUN_ID)"/>
     </ItemGroup>
 
     <PropertyGroup>

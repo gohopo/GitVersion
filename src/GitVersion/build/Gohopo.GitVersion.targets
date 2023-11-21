@@ -13,73 +13,37 @@
     <GetPackageVersionDependsOn>SetVersions;$(GetPackageVersionDependsOn);</GetPackageVersionDependsOn>
   </PropertyGroup>
 
-  <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" Returns="$(Version)" Condition="$(CI)==true or $(Packing)==true">
+  <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" DependsOnTargets="GitInfo;GitVersion" Returns="$(Version)" Condition="$(CI)==true and $(IsPackable)!=false">
     <PropertyGroup>
       <SemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitTag), $(RegexTag)))</SemVerLabel>
       <GitSemVerLabel Condition=" '$(GitTag)' != '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(GitTag)', $(RegexTag))) ">$(SemVerLabel)</GitSemVerLabel>
-      <GitSemVerLabel  Condition="$(CI)==true and '$(BUILD_REASON)'=='Schedule'">$(NightlyTag)</GitSemVerLabel>
+      <GitSemVerLabel  Condition="$(CI) and '$(BUILD_REASON)' == 'Schedule'">$(NightlyTag)</GitSemVerLabel>
       <GitSemVerDashLabel Condition="'$(GitSemVerLabel)' != ''" >-$(GitSemVerLabel)</GitSemVerDashLabel>
     </PropertyGroup>
 
     <ItemGroup>
-      <VersionMetadata Condition="$(CI)!=true" Include="$(BuildTime)"/>
-      <VersionMetadata Condition="$(CI)==true" Include="sha.$(GitCommit)"/>
+      <VersionMetadata Include="$(GitCommits)" Condition="'$(GitSemVerDashLabel)' == ''" />
+      <VersionMetadata Condition="$(CI) and '$(BUILD_REASON)' == 'PullRequest'" Include="pr.$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)"/>
+      <VersionMetadata Include="sha.$(GitCommit)"/>
+      <VersionMetadata Condition="$(CI)" Include="azdo.$(BUILD_BUILDID)"/>
     </ItemGroup>
 
     <PropertyGroup>
       <VersionMetadataLabel>@(VersionMetadata -> '%(Identity)', '-')</VersionMetadataLabel>
       <VersionMetadataPlusLabel Condition="'$(VersionMetadataLabel)' != ''">+$(VersionMetadataLabel)</VersionMetadataPlusLabel>
       <Version>$(GitBaseVersionMajor).$(GitBaseVersionMinor).$(GitBaseVersionPatch)</Version>
-      <PackageReferenceVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel)</PackageReferenceVersion>
-      <PackageReferenceVersion Condition="$(CI)==true">$(PackageReferenceVersion).$(GITHUB_RUN_NUMBER)</PackageReferenceVersion>
+      <PackageReferenceVersion>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)$(GitSemVerDashLabel)</PackageReferenceVersion>
+      <PackageReferenceVersion Condition="$(CI) and '$(GitSemVerDashLabel)' != ''">$(GitSemVerMajor).$(GitSemVerMinor).$(GitBaseVersionPatch)$(GitSemVerDashLabel).$(BUILDVERSION)</PackageReferenceVersion>
+      <PackageReferenceVersion Condition="$(CI) and '$(GitSemVerDashLabel)' == ''">$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)</PackageReferenceVersion>
       <PackageVersion>$(PackageReferenceVersion)$(VersionMetadataPlusLabel)</PackageVersion>
     </PropertyGroup>
 
     <PropertyGroup>
       <InformationalVersion>$(PackageVersion)</InformationalVersion>
-      <FileVersion>$(Version)</FileVersion>
+      <FileVersion>$(Version).$(GitCommits)</FileVersion>
       <AssemblyVersion>1.0.0.0</AssemblyVersion>
     </PropertyGroup>
 
     <Message Importance="high" Text="[$(ProjectName)@$(GitBranch)] $(PackageVersion)"/>
-  </Target>
-
-  <Target Name="InitLocalVersions" BeforeTargets="SetVersions" Condition="$(CI)!=true">
-    <!-- GitVersionFile -->
-    <PropertyGroup>
-      <GitVersionFile Condition="'$(GitVersionFile)' == ''">GitInfo.txt</GitVersionFile>
-      <GitInfoBaseDir Condition="'$(GitInfoBaseDir)' == ''">$(MSBuildProjectDirectory)</GitInfoBaseDir>
-      <GitVersionFile Condition="'$([MSBuild]::GetDirectoryNameOfFileAbove($(GitInfoBaseDir), $(GitVersionFile)))' != ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(GitInfoBaseDir), $(GitVersionFile)))\$(GitVersionFile)</GitVersionFile>
-    </PropertyGroup>
-    <!-- GitVersionFile text -->
-    <PropertyGroup>
-      <GitBaseVersion>$([System.IO.File]::ReadAllText('$(GitVersionFile)'))</GitBaseVersion>
-      <GitBaseVersion>$(GitBaseVersion.Trim())</GitBaseVersion>
-      <GitBaseVersionRegex Condition="'$(GitBaseVersionRegex)' == ''">v?(?&lt;MAJOR&gt;\d+)\.(?&lt;MINOR&gt;\d+)(?:\-(?&lt;LABEL&gt;[\dA-Za-z\-\.]+))?$|^v?(?&lt;MAJOR&gt;\d+)\.(?&lt;MINOR&gt;\d+)\.(?&lt;PATCH&gt;\d+)(?:\-(?&lt;LABEL&gt;[\dA-Za-z\-\.]+))?$|^(?&lt;LABEL&gt;[\dA-Za-z\-\.]+)\-v?(?&lt;MAJOR&gt;\d+)\.(?&lt;MINOR&gt;\d+)\.(?&lt;PATCH&gt;\d+)$</GitBaseVersionRegex>
-      <IsValidGitBaseVersion>
-        $([System.Text.RegularExpressions.Regex]::IsMatch($(GitBaseVersion), $(GitBaseVersionRegex)))
-      </IsValidGitBaseVersion>
-      <IsValidGitBaseVersion>$(IsValidGitBaseVersion.Trim())</IsValidGitBaseVersion>
-    </PropertyGroup>
-    <Error Text="$(GitVersionFile) does not contain a valid base version (found '$(GitBaseVersion)', regex: $(GitBaseVersionRegex))." Condition="'$(IsValidGitBaseVersion)' == 'False'" />
-    <!-- GitBaseVersion -->
-    <PropertyGroup>
-      <GitBaseVersion Condition="$(GitBaseVersion.StartsWith('v'))">$(GitBaseVersion.TrimStart('v'))</GitBaseVersion>
-      <GitBaseVersion Condition="$(GitBaseVersion.StartsWith('V'))">$(GitBaseVersion.TrimStart('V'))</GitBaseVersion>
-      <GitBaseVersionMajor>$([System.Text.RegularExpressions.Regex]::Match($(GitBaseVersion), $(GitBaseVersionRegex)).Groups['MAJOR'].Value)</GitBaseVersionMajor>
-      <GitBaseVersionMinor>$([System.Text.RegularExpressions.Regex]::Match($(GitBaseVersion), $(GitBaseVersionRegex)).Groups['MINOR'].Value)</GitBaseVersionMinor>
-      <GitBaseVersionPatch>$([System.Text.RegularExpressions.Regex]::Match($(GitBaseVersion), $(GitBaseVersionRegex)).Groups['PATCH'].Value)</GitBaseVersionPatch>
-      <GitBaseVersionPatch Condition="'$(GitBaseVersionPatch)' == ''">0</GitBaseVersionPatch>
-      <GitSemVerMajor>$(GitBaseVersionMajor)</GitSemVerMajor>
-      <GitSemVerMinor>$(GitBaseVersionMinor)</GitSemVerMinor>
-      <GitSemVerPatch>$(GitBaseVersionPatch)</GitSemVerPatch>
-      <GitSemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitBaseVersion), $(GitBaseVersionRegex)).Groups['LABEL'].Value)</GitSemVerLabel>
-      <GitSemVerDashLabel Condition="'$(GitSemVerLabel)' != ''" >-$(GitSemVerLabel)</GitSemVerDashLabel>
-    </PropertyGroup>
-    <!-- init -->
-    <PropertyGroup>
-      <BuildTime>$([System.DateTime]::Now.ToString(yyMMddHHmm))</BuildTime>
-      <GitBranch>local</GitBranch>
-    </PropertyGroup>
   </Target>
 </Project>

@@ -15,6 +15,8 @@
 
   <Target Name="SetVersions" BeforeTargets="GetAssemblyVersion" DependsOnTargets="GitInfo;GitVersion" Returns="$(Version)" Condition="$(CI)==true and $(IsPackable)!=false">
     <PropertyGroup>
+      <BUILD_BUILDID Condition="'$(BUILD_BUILDID)' == ''">$(GITHUB_RUN_ID)</BUILD_BUILDID>
+      <BUILD_REASON Condition="'$(BUILD_REASON)' == ''">$(GITHUB_EVENT_NAME)</BUILD_REASON>
       <SemVerLabel>$([System.Text.RegularExpressions.Regex]::Match($(GitTag), $(RegexTag)))</SemVerLabel>
       <GitSemVerLabel Condition=" '$(GitTag)' != '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(GitTag)', $(RegexTag))) ">$(SemVerLabel)</GitSemVerLabel>
       <GitSemVerLabel  Condition="$(CI) and '$(BUILD_REASON)' == 'Schedule'">$(NightlyTag)</GitSemVerLabel>
@@ -25,7 +27,7 @@
       <VersionMetadata Include="$(GitCommits)" Condition="'$(GitSemVerDashLabel)' == ''" />
       <VersionMetadata Condition="$(CI) and '$(BUILD_REASON)' == 'PullRequest'" Include="pr.$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)"/>
       <VersionMetadata Include="sha.$(GitCommit)"/>
-      <VersionMetadata Condition="$(CI)" Include="azdo.$(GITHUB_RUN_ID)"/>
+      <VersionMetadata Condition="$(CI)" Include="azdo.$(BUILD_BUILDID)"/>
     </ItemGroup>
 
     <PropertyGroup>
